@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller gRPC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .search-container {
+            margin-bottom: 20px;
+        }
+        #productTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #productTable th, #productTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #productTable th {
+            background-color: #f4f4f4;
+        }
+        #searchResult {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Taller gRPC</h1>
+    
+    <div class="search-container">
+        <input type="number" id="productId" placeholder="Enter Product ID">
+        <button onclick="searchProduct()">Search</button>
+    </div>
+
+    <div id="searchResult"></div>
+    
+    <h2>Todos los Productos</h2>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Cantidad Por Unidad</th>
+            </tr>
+        </thead>
+        <tbody id="productsBody">
+        </tbody>
+    </table>
+
+    <script>
+        // Cargar todos los productos
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+                const tbody = document.getElementById('productsBody');
+                tbody.innerHTML = '';
+                
+                data.products.forEach(product => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${product.product_id}</td>
+                            <td>${product.product_name}</td>
+                            <td>$${product.unit_price}</td>
+                            <td>${product.units_in_stock}</td>
+                            <td>${product.quantity_per_unit}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Buscar producto por ID
+        async function searchProduct() {
+            const productId = document.getElementById('productId').value;
+            const resultDiv = document.getElementById('searchResult');
+            
+            try {
+                const response = await fetch(`/api/products/${productId}`);
+                const product = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `
+                        <h3>Producto Encontrado:</h3>
+                        <p><strong>Nombre:</strong> ${product.product_name}</p>
+                        <p><strong>Precio:</strong> $${product.unit_price}</p>
+                        <p><strong>Stock:</strong> ${product.units_in_stock}</p>
+                        <p><strong>Cantidad Por Unidad:</strong> ${product.quantity_per_unit}</p>
+                    `;
+                } else {
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `<p style="color: red;">${product.error}</p>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<p style="color: red;">Error searching for product</p>';
+            }
+        }
+
+        // Cargar productos al iniciar
+        loadProducts();
+    </script>
+</body>
+</html>
